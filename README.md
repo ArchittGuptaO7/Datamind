@@ -1,124 +1,113 @@
-# DataMind AI 📊🤖
+# 🧠 DataMind AI
+### AI-powered data analysis, automatic visuals & a chat analyst that draws charts
 
-**AI-Powered Data Analytics, Automated Visualizations & Conversational Data Analysis**
+Upload a CSV/Excel file (or load the built-in demo) and DataMind AI profiles it, draws the right visuals
+automatically, and lets you **ask for charts and numbers in plain English**.
 
-DataMind AI is an interactive data analytics platform that transforms raw CSV and Excel datasets into meaningful insights, visualizations, and actionable information. It combines Python-based data analysis with AI-powered conversational analytics, allowing users to explore their data using natural language.
+## Features
 
-Upload a dataset, explore automatic insights, build custom charts, and ask questions about your data — all through a simple Streamlit interface.
-
-## ✨ Features
-
-- **Dataset Upload:** Import CSV and Excel files or explore demo datasets.
-- **Automated Data Profiling:** Get an overview of columns, data types, statistics, and dataset structure.
-- **Auto Insights:** Discover patterns and useful information automatically.
-- **Interactive Chart Builder:** Create dynamic visualizations using Plotly.
-- **AI Data Analyst:** Ask questions about your dataset in plain English and receive data-driven answers with relevant charts.
-- **Data Quality Analysis:** Identify missing values and potential data-quality issues.
-- **Safe AI Processing:** Uses structured LLM responses and chart validation rather than executing AI-generated Python code.
-- **Fallback Support:** Core functionality remains usable when the AI API is unavailable.
-
-## 🛠️ Tech Stack
-
-| Technology | Purpose |
+| Tab | What it does |
 |---|---|
-| Python | Core programming language |
-| Streamlit | Interactive web application |
-| Pandas & NumPy | Data processing and analysis |
-| Plotly | Interactive visualizations |
-| Scikit-learn | TF-IDF-based retrieval |
-| Groq API / OpenAI client | AI-powered analytics |
-| OpenPyXL | Excel file support |
+| 📋 **Data** | Preview, descriptive statistics, CSV download |
+| ✨ **Auto Insights** | Rule-based key findings · **correlation heatmap** (Pearson/Spearman) · histograms / box plots · category breakdowns · time trends · pairwise scatter matrix · optional AI briefing |
+| 🎨 **Chart Builder** | Build bar, line, area, scatter, histogram, box, violin, pie, correlation & pivot heatmaps with dropdowns + row filters (no API key needed) |
+| 🤖 **AI Analyst** | Chat: *“heatmap of average revenue by region and category”*, *“make it a pie chart”*, *“top 5 regions by revenue in 2025”*. Returns real charts/tables + a short grounded insight |
+| 🧹 **Data Quality** | Missing-value bar + matrix, duplicates (with de-duplicated download), outliers & skew |
 
-## 📁 Project Structure
+Every chart can be downloaded as interactive HTML and every table as CSV.
+
+## How the AI makes charts (safe by design)
 
 ```text
-DataMind-AI/
-│
-├── app.py              # Main Streamlit application
-├── analyst.py          # AI analyst functionality
-├── charts.py           # Chart generation and visualization
-├── data_utils.py       # Data processing utilities
-├── llm.py              # LLM integration
-│
-├── requirements.txt    # Project dependencies
-├── .gitignore          # Files excluded from Git
-├── .env.example        # Environment variable template
-└── README.md
+ "average revenue by region as a bar chart"
+              │
+              ▼
+   LLM planner (Groq / OpenAI)  ── sees only the schema + sample rows, never writes code
+              │  JSON spec: {chart_type:"bar", x:"Region", y:"Revenue", agg:"mean"}
+              ▼
+   Validator (charts.py)  ── unknown column? wrong type? → error sent back to the LLM once to self-repair
+              ▼
+   pandas computes the numbers (exact)  →  Plotly renders the figure
+              ▼
+   LLM explains the *computed* table in 2–4 sentences (numbers must come from the table)
 ```
 
-## ⚙️ Installation & Setup
+* **No `exec`/`eval` of model output** – the LLM can only choose from a fixed set of chart types and
+  columns that really exist, so it cannot run arbitrary code or invent data.
+* **Exact answers** – group-by numbers are computed by pandas, not guessed by the model.
+* **Graceful fallbacks** – no key or API failure → rule-based chart engine for common requests;
+  model retired → the app switches to an available model automatically.
+* **Follow-ups work** – the previous chart spec is passed back, so “make it a pie” / “only 2025” just modify it.
+* **Retrieval** – TF-IDF row retrieval still powers look-up questions (“show passengers named Smith”).
 
-### 1. Clone the repository
+## Quick start (Windows)
 
-```bash
-git clone https://github.com/YOUR-USERNAME/DataMind-AI.git
-cd DataMind-AI
-```
+1. Unzip the folder, open **cmd** inside it.
+2. Double-click `run_app.bat`, **or** run:
 
-### 2. Create a virtual environment
-
-```bash
+```cmd
 python -m venv venv
-```
-
-Activate it:
-
-**Windows**
-```bash
 venv\Scripts\activate
-```
-
-**macOS / Linux**
-```bash
-source venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
 pip install -r requirements.txt
-```
-
-### 4. Configure environment variables
-
-Create a `.env` file in the project root:
-
-```env
-GROQ_API_KEY=your_groq_api_key
-GROQ_MODEL=openai/gpt-oss-120b
-```
-
-Add your own API key. Never upload your `.env` file or expose API credentials publicly.
-
-### 5. Run the application
-
-```bash
 streamlit run app.py
 ```
 
-The application will open in your browser.
+macOS / Linux: `source venv/bin/activate` instead of the `activate` line.
 
-## 🚀 How It Works
+## AI setup (optional)
 
-1. Upload a CSV or Excel dataset, or select demo data.
-2. Explore the dataset through the Data and Auto Insights sections.
-3. Generate interactive visualizations using the Chart Builder.
-4. Ask questions in natural language through the AI Analyst.
-5. Review data-quality information to identify potential issues.
+Copy `.env.example` to `.env` and add your key:
 
-## 🔮 Future Improvements
+```env
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=openai/gpt-oss-120b
+```
 
-- Support for additional data sources and formats.
-- Advanced predictive analytics.
-- More sophisticated natural-language querying.
-- Exportable analytical reports.
-- Enhanced automated insight generation.
+OpenAI also works (`OPENAI_API_KEY`, `OPENAI_MODEL`); if both are set, Groq is used.
+Use the sidebar **🔌 Test LLM connection** button to verify the key and model.
+Without any key, everything except open-ended AI answers still works.
 
-## 👨‍💻 Author
+## Things to try (demo dataset)
 
-**Architt Gupta**  
-B.Tech Computer Science & Engineering (AI & ML)
+* “Show a correlation heatmap”
+* “Average revenue by category as a horizontal bar chart”
+* “Monthly revenue trend split by region”
+* “Box plot of revenue by segment”
+* “Scatter plot of units vs revenue with a trendline”
+* “Heatmap of average satisfaction by region and category”
+* “Top 3 segments by total revenue in 2025” → exact table
+* then: “make it a pie chart”, “only the West region”
 
-## 📄 License
+## Project structure
 
-This project is available under the MIT License.
+```text
+app.py         Streamlit UI (5 tabs, chat, caching)
+analyst.py     Orchestrator: exact answer → rule-based chart → LLM plan → validate → explain
+charts.py      Spec validation, aggregation (pandas), Plotly figures, rule-based chart heuristics
+llm.py         Groq/OpenAI client, model fallback, planner prompt, explanation writer
+data_utils.py  Loading, type detection, profiling, insights, demo data, TF-IDF retrieval
+tests/         35 pytest tests (python -m pytest -q)
+```
+
+## Limits
+
+* Retrieval covers the first 1,500 rows; statistics and charts always use all rows.
+* Large files: distribution plots use a 20,000-row random sample (labelled), statistics use every row.
+* TF-IDF is lexical retrieval; sentence embeddings + a vector DB are the natural next step.
+
+## Suggested future improvements
+
+* Sentence embeddings + FAISS/Chroma, PDF/document RAG
+* Predictive models (AutoML tab) and automated PDF reports
+* Snowflake / SQL as the data layer
+
+## Security
+
+Never commit API keys. `.env` is listed in `.gitignore` (make sure the file is named `.gitignore`).
+If a key is ever exposed, revoke it in the provider console and create a new one.
+
+## Academic positioning
+
+**Project:** DataMind AI — AI-Powered Data Analysis, Visualisation and Conversational Analytics
+**Core concepts:** LLM tool-planning (structured output), RAG, EDA, data visualisation, prompt engineering,
+input validation / safe execution, responsible AI (no hallucinated numbers).
