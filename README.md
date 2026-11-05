@@ -1,4 +1,4 @@
-# 🧠 DataMind AI
+# 🧠 DataMind AI : 
 ### AI-powered data analysis, automatic visuals & a chat analyst that draws charts
 
 Upload a CSV/Excel file (or load the built-in demo) and DataMind AI profiles it, draws the right visuals
